@@ -8,8 +8,10 @@ console.log("TDD");
 
 class Money {
     protected amount: number;
-    constructor(amount: number) {
+    private currency: string;
+    constructor(amount: number, currency: string) {
         this.amount = amount;
+        this.currency = currency;
     }
 
     equals(object: Money): boolean {
@@ -20,49 +22,57 @@ class Money {
         return false;
     }
 
-    static dollar(amount: int): Dollar {
-
+    static dollar(amount: number): Money {
+        return new Dollar(amount, "USD");
     }
+
+    static franc(amount: number): Money {
+        return new Franc(amount, "CHF");
+    }
+
 }
 
 class Dollar extends Money {
-    constructor(amount: number) {
-        super(amount);
+    constructor(amount: number, currency: string) {
+        super(amount, currency);
     }
 
-    times(multiplier: number): Dollar {
-        return new Dollar(this.amount * multiplier);
+    times(multiplier: number): Money {
+        return Money.dollar(this.amount * multiplier);
     }
 }
 
 class Franc extends Money {
-    constructor(amount: number) {
-        super(amount);
+    constructor(amount: number, currency: string) {
+        super(amount, currency);
     }
 
-    times(multiplier: number): Franc {
-        return new Franc(this.amount * multiplier);
+    times(multiplier: number): Money {
+        return Money.franc(this.amount * multiplier);
     }
 }
 
 Deno.test("multiplication", () => {
-    const five = new Dollar(5);
-    assertEquals(new Dollar(10), five.times(2));
-    assertEquals(new Dollar(15), five.times(3));
+    const five: Money = Money.dollar(5);
+    assertEquals(Money.dollar(10), five.times(2));
+    assertEquals(Money.dollar(15), five.times(3));
 });
 
 Deno.test("equality", () => {
-    assertEquals(new Dollar(5), new Dollar(5));
-    assertNotEquals(new Dollar(5), new Dollar(6));
-    assertEquals(new Franc(5), new Franc(5));
-    assert(!new Franc(5).equals(new Franc(6)));
-    assert(new Franc(5) !== new Dollar(5));
+    assertEquals(Money.dollar(5), Money.dollar(5));
+    assertNotEquals(Money.dollar(5), Money.dollar(6));
+    assertEquals(Money.franc(5), Money.franc(5));
+    assert(!Money.franc(5).equals(Money.franc(6)));
+    assert(Money.franc(5) !== Money.dollar(5));
 });
 
 Deno.test("Franc Multiplication", () => {
-    const five = new Franc(5);
-    assertEquals(new Franc(10), five.times(2));
-    assertEquals(new Franc(15), five.times(3));
+    const five = Money.franc(5);
+    assertEquals(Money.franc(10), five.times(2));
+    assertEquals(Money.franc(15), five.times(3));
 });
 
-console.log(new Dollar(5) == new Dollar(5))
+Deno.test("test Currency", () => {
+    assertEquals("USD", Money.dollar(1).currency());
+    assertEquals("CHF", Money.franc(1).currency());
+});
