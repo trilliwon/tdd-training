@@ -44,9 +44,7 @@ Deno.test("multiplication", () => {
 Deno.test("equality", () => {
     assertEquals(Money.dollar(5), Money.dollar(5));
     assertNotEquals(Money.dollar(5), Money.dollar(6));
-    assertEquals(Money.franc(5), Money.franc(5));
-    assert(!Money.franc(5).equals(Money.franc(6)));
-    assert(Money.franc(5) !== Money.dollar(5));
+    assertNotEquals(Money.franc(5), Money.dollar(5));
 });
 
 Deno.test("Franc Multiplication", () => {
