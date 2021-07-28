@@ -8,7 +8,7 @@ console.log("TDD");
 
 class Money {
     protected amount: number;
-    private currency: string;
+    currency: string;
     constructor(amount: number, currency: string) {
         this.amount = amount;
         this.currency = currency;
@@ -23,32 +23,15 @@ class Money {
     }
 
     static dollar(amount: number): Money {
-        return new Dollar(amount, "USD");
+        return new Money(amount, "USD");
     }
 
     static franc(amount: number): Money {
-        return new Franc(amount, "CHF");
-    }
-
-}
-
-class Dollar extends Money {
-    constructor(amount: number, currency: string) {
-        super(amount, currency);
+        return new Money(amount, "CHF");
     }
 
     times(multiplier: number): Money {
-        return Money.dollar(this.amount * multiplier);
-    }
-}
-
-class Franc extends Money {
-    constructor(amount: number, currency: string) {
-        super(amount, currency);
-    }
-
-    times(multiplier: number): Money {
-        return Money.franc(this.amount * multiplier);
+        return new Money(this.amount * multiplier, this.currency);
     }
 }
 
@@ -73,6 +56,6 @@ Deno.test("Franc Multiplication", () => {
 });
 
 Deno.test("test Currency", () => {
-    assertEquals("USD", Money.dollar(1).currency());
-    assertEquals("CHF", Money.franc(1).currency());
+    assertEquals("USD", Money.dollar(1).currency);
+    assertEquals("CHF", Money.franc(1).currency);
 });
