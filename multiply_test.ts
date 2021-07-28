@@ -6,7 +6,15 @@ import {
 
 console.log("TDD");
 
-class Money {
+interface Expression {}
+
+class Bank {
+    reduce(source: Expression, to: string): Money {
+        return Money.dollar(10);
+    }
+}
+
+class Money implements Expression {
     protected amount: number;
     currency: string;
     constructor(amount: number, currency: string) {
@@ -33,7 +41,19 @@ class Money {
     times(multiplier: number): Money {
         return new Money(this.amount * multiplier, this.currency);
     }
+
+    plus(addend: Money): Expression {
+        return new Money(this.amount + addend.amount, this.currency);
+    }
 }
+
+Deno.test("simple addition", () => {
+    const five: Money = Money.dollar(5);
+    const sum: Expression = five.plus(five);
+    const bank: Bank = new Bank();
+    const reduced: Money = bank.reduce(sum, "USD");
+    assertEquals(Money.dollar(10), reduced);
+});
 
 Deno.test("multiplication", () => {
     const five: Money = Money.dollar(5);
@@ -53,7 +73,7 @@ Deno.test("Franc Multiplication", () => {
     assertEquals(Money.franc(15), five.times(3));
 });
 
-Deno.test("test Currency", () => {
+Deno.test("Currency", () => {
     assertEquals("USD", Money.dollar(1).currency);
     assertEquals("CHF", Money.franc(1).currency);
 });
