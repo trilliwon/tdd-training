@@ -6,16 +6,32 @@ import {
 
 console.log("TDD");
 
-interface Expression {}
+interface Expression {
+    reduce(to: string): Money;
+}
+
+class Sum implements Expression {
+    augend: Money;
+    addend: Money;
+    constructor(augend: Money, addend: Money) {
+        this.augend = augend;
+        this.addend = addend;
+    }
+
+    reduce(to: string): Money {
+        const amount = this.augend.amount + this.addend.amount;
+        return new Money(amount, to);
+    }
+}
 
 class Bank {
     reduce(source: Expression, to: string): Money {
-        return Money.dollar(10);
+        return source.reduce(to);
     }
 }
 
 class Money implements Expression {
-    protected amount: number;
+    amount: number;
     currency: string;
     constructor(amount: number, currency: string) {
         this.amount = amount;
@@ -38,14 +54,39 @@ class Money implements Expression {
         return new Money(amount, "CHF");
     }
 
+    reduce(to: string): Money {
+        return this;
+    }
+
     times(multiplier: number): Money {
         return new Money(this.amount * multiplier, this.currency);
     }
 
     plus(addend: Money): Expression {
-        return new Money(this.amount + addend.amount, this.currency);
+        return new Sum(this, addend);
     }
 }
+
+Deno.test("Reduce Money", () => {
+    const bank = new Bank();
+    const result = bank.reduce(Money.dollar(1), "USD");
+    assertEquals(Money.dollar(1), result);
+});
+
+Deno.test("Reduce Sum", () => {
+    const sum: Expression = new Sum(Money.dollar(3), Money.dollar(4));
+    const bank: Bank = new Bank();
+    const result = bank.reduce(sum, "USD");
+    assertEquals(Money.dollar(7), result);
+});
+
+Deno.test("Plus Returns Sum", () => {
+    const five: Money = Money.dollar(5);
+    const result: Expression = five.plus(five);
+    const sum: Sum = result as Sum;
+    assertEquals(five, sum.augend);
+    assertEquals(five, sum.addend);
+});
 
 Deno.test("simple addition", () => {
     const five: Money = Money.dollar(5);
