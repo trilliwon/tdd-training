@@ -7,7 +7,7 @@ import {
 console.log("TDD");
 
 interface Expression {
-    reduce(to: string): Money;
+    reduce(bank: Bank, to: string): Money;
 }
 
 class Sum implements Expression {
@@ -18,15 +18,26 @@ class Sum implements Expression {
         this.addend = addend;
     }
 
-    reduce(to: string): Money {
+    reduce(bank: Bank, to: string): Money {
         const amount = this.augend.amount + this.addend.amount;
         return new Money(amount, to);
     }
 }
 
 class Bank {
+    private rates = new Map();
     reduce(source: Expression, to: string): Money {
-        return source.reduce(to);
+        return source.reduce(this, to);
+    }
+
+    rate(from: string, to: string): number {
+        if (from === to) return 1;
+        const rate = this.rates.get(from + to);
+        return rate;
+    }
+
+    addRate(from: string, to: string, rate: number) {
+        this.rates.set(from + to, rate);
     }
 }
 
@@ -54,8 +65,9 @@ class Money implements Expression {
         return new Money(amount, "CHF");
     }
 
-    reduce(to: string): Money {
-        return this;
+    reduce(bank: Bank, to: string): Money {
+        const rate = bank.rate(this.currency, to);
+        return new Money(this.amount / rate, to);
     }
 
     times(multiplier: number): Money {
@@ -66,6 +78,25 @@ class Money implements Expression {
         return new Sum(this, addend);
     }
 }
+
+Deno.test("Identity Rate", () => {
+    assertEquals(1, new Bank().rate("USD", "USD"));
+});
+
+Deno.test("object as map key", () => {
+    const rates = new Map();
+    const key = "USD" + "CHF";
+    rates.set(key, 1);
+    const key1 = "USD" + "CHF";
+    assertEquals(rates.get(key1), 1);
+});
+
+Deno.test("Reduce Money Different Currency", () => {
+    const bank = new Bank();
+    bank.addRate("CHF", "USD", 2);
+    const result = bank.reduce(Money.franc(2), "USD");
+    assertEquals(Money.dollar(1), result);
+});
 
 Deno.test("Reduce Money", () => {
     const bank = new Bank();
