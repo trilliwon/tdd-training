@@ -9,6 +9,7 @@ console.log("TDD");
 interface Expression {
     plus(addend: Expression): Expression;
     reduce(bank: Bank, to: string): Money;
+    times(multiplier: number): Expression;
 }
 
 class Sum implements Expression {
@@ -27,7 +28,14 @@ class Sum implements Expression {
     }
 
     plus(addend: Expression): Expression {
-        throw new Error("Not Implemented");
+        return new Sum(this, addend);
+    }
+
+    times(multiplier: number): Expression {
+        return new Sum(
+            this.augend.times(multiplier),
+            this.addend.times(multiplier)
+        );
     }
 }
 
@@ -85,6 +93,26 @@ class Money implements Expression {
         return new Sum(this, addend);
     }
 }
+
+Deno.test("Sum Times", () => {
+    const fiveBucks: Expression = Money.dollar(5);
+    const tenFrancs: Expression = Money.franc(10);
+    const bank = new Bank();
+    bank.addRate("CHF", "USD", 2);
+    const sum: Expression = new Sum(fiveBucks, tenFrancs).times(2);
+    const result = bank.reduce(sum, "USD");
+    assertEquals(Money.dollar(20), result);
+});
+
+Deno.test("Sum Plus Money", () => {
+    const fiveBucks: Expression = Money.dollar(5);
+    const tenFrancs: Expression = Money.franc(10);
+    const bank = new Bank();
+    bank.addRate("CHF", "USD", 2);
+    const sum: Expression = new Sum(fiveBucks, tenFrancs).plus(fiveBucks);
+    const result = bank.reduce(sum, "USD");
+    assertEquals(Money.dollar(15), result);
+});
 
 Deno.test("Identity Rate", () => {
     assertEquals(1, new Bank().rate("USD", "USD"));
