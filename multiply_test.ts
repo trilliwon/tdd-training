@@ -7,20 +7,27 @@ import {
 console.log("TDD");
 
 interface Expression {
+    plus(addend: Expression): Expression;
     reduce(bank: Bank, to: string): Money;
 }
 
 class Sum implements Expression {
-    augend: Money;
-    addend: Money;
-    constructor(augend: Money, addend: Money) {
+    augend: Expression;
+    addend: Expression;
+    constructor(augend: Expression, addend: Expression) {
         this.augend = augend;
         this.addend = addend;
     }
 
     reduce(bank: Bank, to: string): Money {
-        const amount = this.augend.amount + this.addend.amount;
+        const amount =
+            this.augend.reduce(bank, to).amount +
+            this.addend.reduce(bank, to).amount;
         return new Money(amount, to);
+    }
+
+    plus(addend: Expression): Expression {
+        throw new Error("Not Implemented");
     }
 }
 
@@ -70,11 +77,11 @@ class Money implements Expression {
         return new Money(this.amount / rate, to);
     }
 
-    times(multiplier: number): Money {
+    times(multiplier: number): Expression {
         return new Money(this.amount * multiplier, this.currency);
     }
 
-    plus(addend: Money): Expression {
+    plus(addend: Expression): Expression {
         return new Sum(this, addend);
     }
 }
@@ -89,6 +96,15 @@ Deno.test("object as map key", () => {
     rates.set(key, 1);
     const key1 = "USD" + "CHF";
     assertEquals(rates.get(key1), 1);
+});
+
+Deno.test("Mixed Addition", () => {
+    const fiveBucks: Expression = Money.dollar(5);
+    const tenFrancs: Expression = Money.franc(10);
+    const bank = new Bank();
+    bank.addRate("CHF", "USD", 2);
+    const result = bank.reduce(fiveBucks.plus(tenFrancs), "USD");
+    assertEquals(Money.dollar(10), result);
 });
 
 Deno.test("Reduce Money Different Currency", () => {
