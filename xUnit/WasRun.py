@@ -6,3 +6,6 @@ class WasRun(TestCase):
         TestCase.__init__(self, name)
     def testMethod(self):
         self.wasRun = 1
+    def setUp(self):
+        self.wasRun = None
+        self.wasSetUp = 1
